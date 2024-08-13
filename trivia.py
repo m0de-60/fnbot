@@ -193,6 +193,13 @@ async def evt_join(server, joindata):
     if pdata[server, chan]['trivia'] is True:
         if pdata[server, chan]['game'] == 'time':
             ctime = 20 - round(time.time() - float(pdata[server, chan]['timer']))
+            if ctime <= 0:
+                trivia(server, dchannel, 'stop')
+                time.sleep(1)
+                trivia(server, dchannel, 'start')
+                return
+            # need to check for time errors here and restart trivia
+            #
             time.sleep(0.5)
             pc.privmsg_(server, channel, '\x0315,1Welcome to\x0310,1 ' + channel.decode() + ', \x0315,1Next question in\x02\x036,1 ' + str(ctime) + ' \x02\x0315,1seconds. Use \x0310,1!thelp\x0315,1 for help.\x03')
             return
