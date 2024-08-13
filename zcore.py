@@ -814,7 +814,7 @@ async def keep_alive():
     # ------------------------------------------------------------------------------------------------------------------
     # main loop
     while 1:
-        time.sleep(0.10)  # quick break then back to work
+        time.sleep(0.01)  # quick break then back to work
         if zcore['mode'] == 'shutdown' or zcore['mode'] == 'reboot':
             break
         for pc in range(len(server)):
@@ -924,6 +924,7 @@ def shut_down():
         zcore[p_server[x], 'connected'] = False
         zcore[p_server[x], 'sock'].send(b'QUIT :(Powered by zCore)\r\n')
         zcore[p_server[x], 'sock'].close()
+        zcore[p_server[x], 'thread'].join()
         zprint(f'[*] {p_server[x]} disconnected.')
         continue
     zprint(f'[*] Exit complete. Good-bye!')
