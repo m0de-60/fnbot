@@ -1133,6 +1133,11 @@ def remfile(filename):
     os.remove(filename)
     return
 
+# Renames a single file ------------------------------------------------------------------------------------------------
+def renamefile(file, newfile):
+    os.rename(file, newfile)
+    return
+
 # deletes specified key from section in cnf file. ----------------------------------------------------------------------
 def cnfdelete(file, section, key):
     config = configparser.ConfigParser()

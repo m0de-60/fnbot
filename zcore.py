@@ -196,7 +196,8 @@ def irc_connect(serverid):
     try:
         zcore[serverid, 'sock'].connect((str(zcore[serverid, 'serveraddr']), int(zcore[serverid, 'serverport'])))
     except socket.gaierror or ssl.SSLEOFError:
-        zprint(f'[*] Connection attempt to {serverid} failed.')
+        zprint(f'[*] Connection attempt to {serverid} failed. Attempting reconnection in 15 seconds...')
+        time.sleep(15)
         asyncio.run(re_connect(serverid))
         return
     # SSL only
@@ -788,7 +789,7 @@ async def irc_loop(threadname):
 
 # ======================================================================================================================
 # module_stop('serverid'):
-# Stops any plugins on server and its channels in the even of a connection loss/interruption (OSError, SSLError)
+# Stops any plugins on server and its channels in the event of a connection loss/interruption (OSError, SSLError)
 def module_stop(server):
     global zcore
 
@@ -796,11 +797,9 @@ def module_stop(server):
     for x in range(len(zcore['plugin'])):
         try:
             zcore['plugin'][x].plugin_stop_(server)
+            continue
         except AttributeError:
             continue
-    # time.sleep(0.1)
-    # close the thread
-    zcore[server, 'thread'] = ''
     return
 
 # ======================================================================================================================
@@ -835,6 +834,7 @@ async def keep_alive():
                         zcore[server[pc], 'connected'] = False
                         zcore[server[pc], 'sock'].close()
                         module_stop(server[pc])
+                        zcore[server[pc], 'thread'].join()
                         # time.sleep(10)
                         await re_connect(server[pc])
                 continue

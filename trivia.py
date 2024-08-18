@@ -54,7 +54,6 @@ def plugin_exit_():
 def plugin_stop_(server):
     global pdata
     if pdata != {}:
-        pdata[server, 'connected'] = False
         mprint(f'Core Override: Trivia has been stopped on {server} by zCore')
         for x in range(len(pdata[server, 'channel'])):
             chan = str(pdata[server, 'channel'][x].replace('#', '')).lower()
@@ -651,7 +650,7 @@ async def trivia(server, channel, opt, cat='', opt2=''):
         # duser = channel.decode()
         # duser = duser.lower()
         duser = channel
-        totalerr = 0
+        totalerr = '0^0'
         if cat == 'all':
             # pc.notice_(server, duser.encode(), 'Check All')
             mprint('Checking all trivia categories for errors...')
@@ -659,70 +658,136 @@ async def trivia(server, channel, opt, cat='', opt2=''):
                 filename = './qafiles/' + pdata['category'][x] + '.txt'
                 mprint('Checking file ' + cat.lower() + '.txt for trivia errors...')
                 errnum = t_file_clean(filename)
-                if errnum != 0:
-                    mprint('Error check for ' + pdata['category'][x] + '.txt complete. Errors removed: ' + str(errnum) + ' and stored in ./qafiles/qlog.txt')
+                if errnum != '0^0':
+                    mprint('Error check for ' + pdata['category'][x] + '.txt complete. Errors fixed: ' + str(pc.gettok(errnum, 1, '^')) + ' Errors removed: ' + str(pc.gettok(errnum, 0, '^')) + ' and stored in ./qafiles/qlog.txt')
                 else:
-                    mprint('Error check for ' + pdata['category'][x] + '.txt complete. Errors found: ' + str(errnum))
-                totalerr = totalerr + errnum
+                    mprint('Error check for ' + pdata['category'][x] + '.txt complete. Errors fixed: ' + str(pc.gettok(errnum, 1, '^')) + ' Errors removed: ' + str(pc.gettok(errnum, 0, '^')) + ' and stored in ./qafiles/qlog.txt')
+                err = int(pc.gettok(totalerr, 0, '^')) + int(pc.gettok(errnum, 0, '^'))
+                fix = int(pc.gettok(totalerr, 1, '^')) + int(pc.gettok(errnum, 1, '^'))
+                totalerr = str(err) + '^' + str(fix)
                 continue
-            mprint('Error checking for all trivia categories is complete. Errors found and removed: ' + str(totalerr))
-            pc.notice_(server, duser.encode(), '[T-M] * Check All complete. Errors found and removed: ' + str(totalerr))
+            mprint('Error checking for all trivia categories is complete. Errors fixed: ' + str(pc.gettok(totalerr, 1, '^')) + ' Errors removed: ' + str(pc.gettok(totalerr, 0, '^')) + ' and stored in ./qafiles/qlog.txt')
+            pc.notice_(server, duser.encode(), '[T-M] * Check All complete. Errors fixed: ' + str(pc.gettok(totalerr, 1, '^')) + ' Errors removed: ' + str(pc.gettok(totalerr, 0, '^')) + ' and stored in ./qafiles/qlog.txt')
             return
         else:
             filename = './qafiles/' + cat.lower() + '.txt'
             # pc.notice_(server, duser.encode(), 'Checking ' + cat.lower())
             mprint('Checking file ' + cat.lower() + '.txt for trivia errors...')
             errnum = t_file_clean(filename)
-            if errnum != 0:
-                mprint('Error check for ' + cat.lower() + '.txt complete. Errors removed: ' + str(errnum) + ' and stored in ./qafiles/qlog.txt')
-                pc.notice_(server, duser.encode(), '[T-M] * Checking complete. Errors removed: ' + str(errnum))
-            else:
-                mprint('Error check for ' + cat.lower() + '.txt complete. Errors found: ' + str(errnum))
-                pc.notice_(server, duser.encode(), '[T-M] * Checking complete. Errors found: ' + str(errnum))
+            mprint('Error check for ' + cat.lower() + '.txt complete. Errors fixed: ' + str(pc.gettok(errnum, 1, '^')) + ' Errors removed: ' + str(pc.gettok(errnum, 0, '^')) + ' and stored in ./qafiles/qlog.txt')
+            pc.notice_(server, duser.encode(), '[T-M] * Category check for ' + cat.lower() + ' complete. Errors fixed: ' + str(pc.gettok(errnum, 1, '^')) + ' Errors removed: ' + str(pc.gettok(errnum, 0, '^')) + ' and stored in ./qafiles/qlog.txt')
             return
 
 # End trivia() =========================================================================================================
 
 # ======================================================================================================================
 # Trivia category file cleaner
-# File must exist in qafiles folder in zCore directory. zcore/qafiles/filename.txt
+# File must exist in qafiles folder in zCore directory. ./zcore/qafiles/filename.txt
+# ### Improperly formatted trivia data will cause errors in the game.
+# ### BUG REMOVAL!! Make sure to scan all new trivia files to fix or remove
+# to add better correction for ':'
+
 def t_file_clean(filename):
     # Scan the file for improperly formatted questions
     fname = filename
     file = open(fname, 'r')
     filelines = file.readlines()
+    # filelines = filelines.splitlines()
     # properly formatted questions are stored in the 'clean file'
     c_file = open('./qafiles/cleanfile.txt', 'a')
     # improperly formatted questions are removed and stored in the qlog.txt
     qlog = open('./qafiles/qlog.txt', 'a')
-    # how many errors are found? Starts with 0
+    # how many errors are found? Starts with 0 same for fixes
     errnum = 0
+    fixnum = 0
+    lasttok = ''
+    l_tok1 = ''
+    l_tok2 = ''
+    tokenc = 0
     # scanning for and removing improperly formatted questions
     for x in range(len(filelines)):
+        # Remove questions that do not contain proper token seperator character " ` " (grave accent mark)
         if pc.numtok(filelines[x], '`') != 2:
             errnum += 1
-            qlog.write(filelines[x])
+            qlog.write('ERR-BAD-SYN: ' + filelines[x])
             continue
         else:
+            q = pc.gettok(filelines[x], 0, '`')
+            a = pc.gettok(filelines[x], 1, '`')
+            print(f'Q: {q} TOK: {pc.numtok(q, ': ')}')
+
+            # answer is present in question
+            if a in q:
+                errnum += 1
+                qlog.write('ERR-BAD-FRM: ' + filelines[x])
+                continue
+
+            # Remove 5 letter answers that contain white spaces
+            if len(a) == 5 and pc.numtok(a, ' ') > 1:
+                errnum += 1
+                qlog.write('ERR-5-CHR: ' + filelines[x])
+                continue
+            # Fix erroneous colan formats
+            # Category: Question
+            if pc.numtok(q, ': ') == 2:
+                if lasttok == '' or lasttok == pc.gettok(q, 0, ': '):
+                    if lasttok == '':
+                        lasttok = pc.gettok(q, 0, ': ')
+                    q = pc.gettok(q, 1, ': ')
+                    fixnum += 1
+                    qlog.write('ERR-FIX-MOD2: ' + filelines[x])
+                    c_file.write(str(q) + '`' + str(a))
+                    continue
+                else:
+                    lasttok = ''
+                    qlog.write('ERR-REJ-OK: ' + filelines[x])
+                    c_file.write(str(q) + '`' + str(a))
+                    continue
+            # Fix erroneous colan formats (remove Category: and leave Sub-Category:)
+            # Category: Sub-category: Question
+            if pc.numtok(q, ': ') == 3:
+                tok1 = pc.gettok(q, 0, ': ')
+                tok2 = pc.gettok(q, 1, ': ')
+                if l_tok1 == '':
+                    l_tok1 = tok1
+                if l_tok2 == '':
+                    l_tok2 = tok2
+                if l_tok1 == tok1 and l_tok2 == tok2:
+                    ltk = tok1 + ': '
+                    q = q.replace(ltk, '')
+                    fixnum += 1
+                    print(f'PRINTEST: {q}`{a}')
+                    qlog.write('ERR-FIX-MOD3: ' + filelines[x])
+                    c_file.write(str(q) + '`' + str(a))
+                    continue
+
+            # Remove erroneous excessive colon formats
+            if pc.numtok(q, ':') >= 4:
+                errnum += 1
+                qlog.write('ERR-TOK-EXC: ' + filelines[x])
+                continue
+
+            # Properly formatted question, write to file.
             c_file.write(filelines[x])
             continue
     file.close()
     c_file.close()
     qlog.close()
     # saving the 'cleaned list' as the category file.
-    open(fname, 'w').close()
-    file = open(fname, 'a')
-    c_file = open('./qafiles/cleanfile.txt', 'r')
-    filelines = c_file.readlines()
+    # open(fname, 'w').close()
+    # file = open(fname, 'a')
+    # c_file = open('./qafiles/cleanfile.txt', 'r')
+    # filelines = c_file.readlines()
     # errnum = 0
-    for x in range(len(filelines)):
-        # errnum += 1
-        file.write(filelines[x])
-        continue
-    c_file.close()
-    pc.remfile('./qafiles/cleanfile.txt')
+    # for x in range(len(filelines)):
+    #    # errnum += 1
+    #    file.write(filelines[x])
+    #    continue
+    # c_file.close()
+    pc.remfile(filename)
+    pc.renamefile('./qafiles/cleanfile.txt', filename)
     # returns the number of errors found
-    return errnum
+    return str(errnum) + '^' + str(fixnum)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # free up resources (test)
@@ -1234,8 +1299,8 @@ async def score_keep(server, channel, args):
     #    return
 
     if args == 'hs' or args == 'st':
-        # datagot.sort(reverse=True)
-        datagot.sort(key=lambda x: int(x.split('^')[0]), reverse=True)
+        # There was a sorting bug here, thank you to katia for fixing this! :)
+        datagot.sort(key=lambda x: int(x.split('^')[0]), reverse=True)  # katia fixed this
 
     if len(datagot) == 1:
         score_msg = score_msg + eep(datagot[0])
@@ -1251,7 +1316,7 @@ async def score_keep(server, channel, args):
     pc.privmsg_(server, channel, score_msg)
     return
 
-# ¯\_(o.O)_/¯ Is this Sparta?
+# ¯\_(o.O)_/¯ Is this Sparta? (This actually just seperates and formats score
 def eep(wildeep):  # This is quite the useful tool
     wild = pc.gettok(wildeep, 1, '^')
     eep_ = pc.gettok(wildeep, 0, '^')
@@ -1269,6 +1334,9 @@ def eep(wildeep):  # This is quite the useful tool
 
 # ----------------------------------------------------------------------------------------------------------------------
 # The longest winning streaks of the week, month
+
+# ======================================================================================================================
+
 
 # ######################################
 # Testing zone (will be removed from released version)
