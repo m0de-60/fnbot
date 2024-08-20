@@ -56,15 +56,7 @@ def plugin_stop_(server):
     if pdata != {}:
         mprint(f'Core Override: Trivia has been stopped on {server} by zCore')
         for x in range(len(pdata[server, 'channel'])):
-            chan = str(pdata[server, 'channel'][x].replace('#', '')).lower()
-            pdata[server, chan]['thread'].join()
-            pdata[server, chan]['timerun'] = False
-            pdata[server, chan]['trivia'] = False
-            pdata[server, chan]['game'] = '0'
-            pdata[server, chan]['mode'] = '0'
-            freetriv(server, pdata[server, 'channel'][x])
-            pdata[server, chan]['streakname'] = '0'
-            pdata[server, chan]['streakcount'] = 0
+            trivia(server, pdata[server, 'channel'][x], 'inter')
             continue
         return 1
     return 0
@@ -141,7 +133,7 @@ def plugin_init_():
             pdata[server, chan]['response'] = '0'  # keeps track of response times
             pdata[server, chan]['streakname'] = '0'
             pdata[server, chan]['streakcount'] = 0
-            pdata[server, chan]['fpotd'] = '0'
+            # pdata[server, chan]['fpotd'] = '0'
             continue
         continue
 
@@ -189,7 +181,7 @@ async def evt_join(server, joindata):
         await trivia(server, dchannel, 'start')
         return
 
-    if pdata[server, chan]['trivia'] is True:
+    if pdata[server, chan]['trivia'] is True and pdata[server, chan]['game'] != 0:
         if pdata[server, chan]['game'] == 'time':
             ctime = 20 - round(time.time() - float(pdata[server, chan]['timer']))
             if ctime <= 0:
@@ -200,7 +192,7 @@ async def evt_join(server, joindata):
             # need to check for time errors here and restart trivia
             #
             time.sleep(0.5)
-            pc.privmsg_(server, channel, '\x0315,1Welcome to\x0310,1 ' + channel.decode() + ', \x0315,1Next question in\x02\x036,1 ' + str(ctime) + ' \x02\x0315,1seconds. Use \x0310,1!thelp\x0315,1 for help.\x03')
+            pc.privmsg_(server, channel, '\x0315,1Welcome to\x0310,1 ' + channel.decode() + ', \x0315,1Next question in\x02\x033,1 ' + str(ctime) + ' \x02\x0315,1seconds. Use \x0310,1!thelp\x0315,1 for help.\x03')
             return
         if pdata[server, chan]['game'] == 'play':
             time.sleep(0.5)
@@ -209,7 +201,7 @@ async def evt_join(server, joindata):
                 hintmsg = pdata[server, chan]['hint2']
             if pdata[server, chan]['hints'] > 2:
                 hintmsg = pdata[server, chan]['hint3']
-            pc.privmsg_(server, channel, '\x0315,1Welcome to\x0310,1 ' + channel.decode() + ',\x0315,1 Use \x0310,1!thelp\x0315,1 for help. \x02\x036,1CURRENT TRIVIA:\x02\x0315,1 ' + pdata[server, chan]['question'] + ' \x02\x036,1HINT:\x02\x0310,1 ' + str(hintmsg) + '\x03')
+            pc.privmsg_(server, channel, '\x0315,1Welcome to\x0310,1 ' + channel.decode() + ',\x0315,1 Use \x0310,1!thelp\x0315,1 for help. \x02\x033,1CURRENT TRIVIA:\x02\x0315,1 ' + pdata[server, chan]['question'] + ' \x02\x033,1HINT:\x02\x0310,1 ' + str(hintmsg) + '\x03')
             return
     else:
         return
@@ -352,7 +344,7 @@ async def evt_privmsg(server, message):
             if pdata[server, chan]['game'] == 'time':
                 ctime = 20 - round(time.time() - float(pdata[server, chan]['timer']))
                 time.sleep(0.4)
-                pc.privmsg_(server, channel, '\x0315,1New question coming up in\x02\x036,1 ' + str(ctime) + ' \x02\x03seconds.')
+                pc.privmsg_(server, channel, '\x0315,1New question coming up in\x02\x033,1 ' + str(ctime) + ' \x02\x03seconds.')
                 return
 
         if mdata[4].lower() == b'skip' and pdata[server, chan]['trivia'] is False:
@@ -388,7 +380,7 @@ async def evt_privmsg(server, message):
         if pdata[server, chan]['trivia'] is False:
             return
         time.sleep(0.25)
-        pc.privmsg_(server, channel, '\x02\x0315,1USER COMMANDS:\x02\x036,1  !myscore  !highscore  !streaks  !thelp\x03')
+        pc.privmsg_(server, channel, '\x02\x0315,1USER COMMANDS:\x02\x033,1  !myscore  !highscore  !streaks  !thelp\x03')
         return
     # ------------------------------------------------------------------------------------------------------------------
     # !myscore - displays user score and statistics
@@ -398,10 +390,10 @@ async def evt_privmsg(server, message):
         if pc.cnfexists('trivia.cnf', server + '_' + chan, dusername) is False:
             pc.privmsg_(server, channel, str(username.decode()) + 'you have not played yet.')
             return
-        score = '\x037,1[\x036,1Score:\x038,1 ' + str(playerstats(server, channel, dusername, 'score')) + '\x037,1]'
-        wins = '\x037,1[\x036,1Wins:\x038,1 ' + str(playerstats(server, channel, dusername, 'wins')) + '\x037,1]'
-        streak = '\x037,1[\x036,1Longest Streak:\x038,1 ' + str(playerstats(server, channel, dusername, 'streak')) + '\x037,1]'
-        best = '\x037,1[\x036,1Best Time:\x038,1 ' + str(playerstats(server, channel, dusername, 'best')) + '\x037,1]\x03'
+        score = '\x037,1[\x033,1Score:\x038,1 ' + str(playerstats(server, channel, dusername, 'score')) + '\x037,1]'
+        wins = '\x037,1[\x033,1Wins:\x038,1 ' + str(playerstats(server, channel, dusername, 'wins')) + '\x037,1]'
+        streak = '\x037,1[\x033,1Longest Streak:\x038,1 ' + str(playerstats(server, channel, dusername, 'streak')) + '\x037,1]'
+        best = '\x037,1[\x033,1Best Time:\x038,1 ' + str(playerstats(server, channel, dusername, 'best')) + '\x037,1]\x03'
         stats = '\x02\x0315,1PLAYER SCORE:\x02\x0310,1    ' + username.decode() + '    ' + score + wins + streak + best
         # add stuff here so can be toggled from privmsg or notice
         time.sleep(0.5)
@@ -453,7 +445,7 @@ async def evt_privmsg(server, message):
                 points = int(playerstats(server, channel, dusername, 'score')) + int(pdata[server, chan]['points'])
                 playerstats(server, channel, dusername, 'score', 'c', str(points))
                 if playerstats(server, channel, dusername, 'best') == 'NA' or totaltime < float(playerstats(server, channel, dusername, 'best')):
-                    pc.privmsg_(server, channel, '\x02\x0310,1' + username.decode() + '\x02   \x037,1Set a new best time record!   \x02\x038,1>\x036,1 ' + str(totaltime) + ' seconds\x038,1 <\x02\x03')
+                    pc.privmsg_(server, channel, '\x02\x0310,1' + username.decode() + '\x02   \x037,1Set a new best time record!   \x02\x038,1>\x033,1 ' + str(totaltime) + ' seconds\x038,1 <\x02\x03')
                     playerstats(server, channel, dusername, 'best', 'c', str(totaltime))
                 # set up for winning streak
                 if pdata[server, chan]['streakname'] != dusername:
@@ -464,7 +456,7 @@ async def evt_privmsg(server, message):
                     playerstats(server, channel.decode(), dusername, 'streak', 'c', str(pdata[server, chan]['streakcount']))
                 if pdata[server, chan]['streakcount'] > 1:
                     time.sleep(0.2)
-                    pc.privmsg_(server, channel, '\x02\x0310,1' + username.decode() + '\x02   \x0315,1Won\x02\x036,1 ' + str(pdata[server, chan]['streakcount']) + ' \x02\x0315,1in a row!   \x02\x037,1 * WINNING STREAK *\x02\x03')
+                    pc.privmsg_(server, channel, '\x02\x0310,1' + username.decode() + '\x02   \x0315,1Won\x02\x033,1 ' + str(pdata[server, chan]['streakcount']) + ' \x02\x0315,1in a row!   \x02\x037,1 * WINNING STREAK *\x02\x03')
                 time.sleep(1.25)
                 freetriv(server, dchannel)
                 await trivia(server, dchannel, 'next')
@@ -498,11 +490,25 @@ async def trivia(server, channel, opt, cat='', opt2=''):
             cmsg = 'Random Category'
             if opt2 != '':
                 pdata[server, chan]['category'] = opt2
-        pc.privmsg_(server, channel.encode(), '\x02\x0314,1Trivia Master \x036,1   v' + pdata['pversion'] + '\x02\x0315,1    Now running:\x037,1 \x02' + cmsg + '\x02\x03')
+        pc.privmsg_(server, channel.encode(), '\x02\x0314,1Trivia Master \x033,1   v' + pdata['pversion'] + '\x02\x0315,1    Now running:\x037,1 \x02' + cmsg + '\x02\x03')
         time.sleep(1)
         pdata[server, chan]['game'] = 'time'
         # mprint(f'AWAIT NEXT')
         await trivia(server, channel, 'next')
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # interrupt trivia (similar to 'stop' but used when connection is interrupted)
+    # trivia(server, channel, 'inter')
+    if opt == 'inter':
+        mprint(f'TRIVIA INTERRUPT: {server} {channel}')
+        pdata[server, chan]['timerun'] = False
+        pdata[server, chan]['game'] = '0'
+        pdata[server, chan]['mode'] = '0'
+        freetriv(server, channel)
+        pdata[server, chan]['streakname'] = '0'
+        pdata[server, chan]['streakcount'] = 0
+        pdata[server, chan]['thread'].join()
+        return
 
     # ------------------------------------------------------------------------------------------------------------------
     # stop trivia
@@ -515,7 +521,7 @@ async def trivia(server, channel, opt, cat='', opt2=''):
         freetriv(server, channel)
         pdata[server, chan]['streakname'] = '0'
         pdata[server, chan]['streakcount'] = 0
-        pc.privmsg_(server, channel.encode(), '\x02\x0314,1Trivia Master \x036,1   v' + pdata['pversion'] + '\x02\x0315,1    Stopped.\x03')
+        pc.privmsg_(server, channel.encode(), '\x02\x0314,1Trivia Master \x033,1   v' + pdata['pversion'] + '\x02\x0315,1    Stopped.\x03')
         return
     # ------------------------------------------------------------------------------------------------------------------
     # next question
@@ -570,7 +576,7 @@ async def trivia(server, channel, opt, cat='', opt2=''):
 
             pdata[server, chan]['timerun'] = True
             pdata[server, chan]['timer'] = time.time()
-            pc.privmsg_(server, channel.encode(), '\x0315,1Next question in\x02\x036,1 20 \x02\x0315,1seconds...\x03')
+            pc.privmsg_(server, channel.encode(), '\x0315,1Next question in\x02\x033,1 20 \x02\x0315,1seconds...\x03')
             pdata[server, chan]['thread'] = threading.Thread(target=timer, args=(server, channel,), daemon=True)
             pdata[server, chan]['thread'].start()
 
@@ -581,8 +587,8 @@ async def trivia(server, channel, opt, cat='', opt2=''):
         pdata[server, chan]['game'] = 'play'
         pdata[server, chan]['response'] = time.time()
         pdata[server, chan]['pointimer'] = time.time()
-        pc.privmsg_(server, channel.encode(), '\x02\x0310,1[\x036,1\x02No.\x02' + str(pdata[server, chan]['qnum']) + ' ' + pdata[server, chan]['category'] + '\x0310,1]\x0315,1   \x02 ' + pdata[server, chan]['question'] + '\x03')
-        pc.privmsg_(server, channel.encode(), '\x0315,1First hint in\x02\x036,1 20 \x02\x0315,1seconds...\x03')
+        pc.privmsg_(server, channel.encode(), '\x02\x0310,1[\x033,1\x02No.\x02 ' + str(pdata[server, chan]['qnum']) + ' ' + pdata[server, chan]['category'] + '\x0310,1]\x0315,1   \x02 ' + pdata[server, chan]['question'] + '\x03')
+        pc.privmsg_(server, channel.encode(), '\x0315,1First hint in\x02\x033,1 20 \x02\x0315,1seconds...\x03')
 
         # testing
         # mprint(f'Q: {pdata[server, chan]['question']}')
@@ -609,7 +615,7 @@ async def trivia(server, channel, opt, cat='', opt2=''):
         # create hint!!
         hintx = 'hint' + str(pdata[server, chan]['hints'])
         hint = pdata[server, chan][hintx]
-        pc.privmsg_(server, channel.encode(), '\x02\x0314,1Hint\x0315,1 # ' + str(pdata[server, chan]['hints']) + ':\x02\x0310,1 ' + hint + '\x03')
+        pc.privmsg_(server, channel.encode(), '\x02\x0314,1Hint # ' + str(pdata[server, chan]['hints']) + ':\x02\x037,1 ' + str(hint) + '\x03')
         # hint = hint_gen(ans, int(pdata[server, chan]['hints']), hnt)
         # pc.privmsg_(server, channel.encode(), 'Hint #' + str(pdata[server, chan]['hints']) + ': ' + hint)
 
@@ -627,7 +633,7 @@ async def trivia(server, channel, opt, cat='', opt2=''):
         pdata[server, chan]['timerun'] = False
         pdata[server, chan]['streakname'] = '0'
         pdata[server, chan]['streakcount'] = 0
-        pc.privmsg_(server, channel.encode(), '\x02\x037,1Time is up!\x02\x0315,1    The answer is:\x02\x036,1 ' + pdata[server, chan]['answer'] + '\x03\x02')
+        pc.privmsg_(server, channel.encode(), '\x02\x037,1Time is up!\x02\x0315,1    The answer is:\x02\x033,1 ' + pdata[server, chan]['answer'] + '\x03\x02')
         time.sleep(1)
         freetriv(server, channel)
         await trivia(server, channel, 'next')
@@ -658,24 +664,21 @@ async def trivia(server, channel, opt, cat='', opt2=''):
                 filename = './qafiles/' + pdata['category'][x] + '.txt'
                 mprint('Checking file ' + cat.lower() + '.txt for trivia errors...')
                 errnum = t_file_clean(filename)
-                if errnum != '0^0':
-                    mprint('Error check for ' + pdata['category'][x] + '.txt complete. Errors fixed: ' + str(pc.gettok(errnum, 1, '^')) + ' Errors removed: ' + str(pc.gettok(errnum, 0, '^')) + ' and stored in ./qafiles/qlog.txt')
-                else:
-                    mprint('Error check for ' + pdata['category'][x] + '.txt complete. Errors fixed: ' + str(pc.gettok(errnum, 1, '^')) + ' Errors removed: ' + str(pc.gettok(errnum, 0, '^')) + ' and stored in ./qafiles/qlog.txt')
+                mprint('Error check for ' + pdata['category'][x] + '.txt complete. [Errors fixed: ' + str(pc.gettok(errnum, 1, '^')) + '] [Errors removed: ' + str(pc.gettok(errnum, 0, '^')) + ' and stored in ./qafiles/qlog.txt]')
                 err = int(pc.gettok(totalerr, 0, '^')) + int(pc.gettok(errnum, 0, '^'))
                 fix = int(pc.gettok(totalerr, 1, '^')) + int(pc.gettok(errnum, 1, '^'))
                 totalerr = str(err) + '^' + str(fix)
                 continue
-            mprint('Error checking for all trivia categories is complete. Errors fixed: ' + str(pc.gettok(totalerr, 1, '^')) + ' Errors removed: ' + str(pc.gettok(totalerr, 0, '^')) + ' and stored in ./qafiles/qlog.txt')
-            pc.notice_(server, duser.encode(), '[T-M] * Check All complete. Errors fixed: ' + str(pc.gettok(totalerr, 1, '^')) + ' Errors removed: ' + str(pc.gettok(totalerr, 0, '^')) + ' and stored in ./qafiles/qlog.txt')
+            mprint('Error checking for all trivia categories is complete. [Errors fixed: ' + str(pc.gettok(totalerr, 1, '^')) + '] [Errors removed: ' + str(pc.gettok(totalerr, 0, '^')) + ' and stored in ./zcore/qafiles/qlog.txt]')
+            pc.notice_(server, duser.encode(), '[T-M] * Check All complete. [Errors fixed: ' + str(pc.gettok(totalerr, 1, '^')) + '] [Errors removed: ' + str(pc.gettok(totalerr, 0, '^')) + ' and stored in ./qafiles/qlog.txt]')
             return
         else:
             filename = './qafiles/' + cat.lower() + '.txt'
             # pc.notice_(server, duser.encode(), 'Checking ' + cat.lower())
             mprint('Checking file ' + cat.lower() + '.txt for trivia errors...')
             errnum = t_file_clean(filename)
-            mprint('Error check for ' + cat.lower() + '.txt complete. Errors fixed: ' + str(pc.gettok(errnum, 1, '^')) + ' Errors removed: ' + str(pc.gettok(errnum, 0, '^')) + ' and stored in ./qafiles/qlog.txt')
-            pc.notice_(server, duser.encode(), '[T-M] * Category check for ' + cat.lower() + ' complete. Errors fixed: ' + str(pc.gettok(errnum, 1, '^')) + ' Errors removed: ' + str(pc.gettok(errnum, 0, '^')) + ' and stored in ./qafiles/qlog.txt')
+            mprint('Error check for ' + cat.lower() + '.txt complete. [Errors fixed: ' + str(pc.gettok(errnum, 1, '^')) + '] [Errors removed: ' + str(pc.gettok(errnum, 0, '^')) + ' and stored in ./qafiles/qlog.txt]')
+            pc.notice_(server, duser.encode(), '[T-M] * Category check for ' + cat.lower() + ' complete. [Errors fixed: ' + str(pc.gettok(errnum, 1, '^')) + '] [Errors removed: ' + str(pc.gettok(errnum, 0, '^')) + ' and stored in ./qafiles/qlog.txt]')
             return
 
 # End trivia() =========================================================================================================
@@ -700,75 +703,78 @@ def t_file_clean(filename):
     # how many errors are found? Starts with 0 same for fixes
     errnum = 0
     fixnum = 0
-    lasttok = ''
-    l_tok1 = ''
-    l_tok2 = ''
-    tokenc = 0
+    # lasttok = ''
+    # l_tok1 = ''
+    # l_tok2 = ''
+    # tokenc = 0
     # scanning for and removing improperly formatted questions
     for x in range(len(filelines)):
+        fileline = filelines[x].replace('\n', '')
         # Remove questions that do not contain proper token seperator character " ` " (grave accent mark)
-        if pc.numtok(filelines[x], '`') != 2:
+        if pc.numtok(fileline, '`') != 2:
             errnum += 1
-            qlog.write('ERR-BAD-SYN: ' + filelines[x])
+            qlog.write('ERR-BAD-SYN: ' + fileline + '\n')
             continue
         else:
-            q = pc.gettok(filelines[x], 0, '`')
-            a = pc.gettok(filelines[x], 1, '`')
-            print(f'Q: {q} TOK: {pc.numtok(q, ': ')}')
+            q = pc.gettok(fileline, 0, '`')
+            a = pc.gettok(fileline, 1, '`')
+            # print(f'Q: {q} TOK: {pc.numtok(q, ': ')}')
 
             # answer is present in question
             if a in q:
                 errnum += 1
-                qlog.write('ERR-BAD-FRM: ' + filelines[x])
+                qlog.write('ERR-BAD-FRM: ' + fileline + '\n')
                 continue
 
             # Remove 5 letter answers that contain white spaces
             if len(a) == 5 and pc.numtok(a, ' ') > 1:
                 errnum += 1
-                qlog.write('ERR-5-CHR: ' + filelines[x])
+                qlog.write('ERR-5-CHR: ' + fileline + '\n')
                 continue
+
             # Fix erroneous colan formats
             # Category: Question
             if pc.numtok(q, ': ') == 2:
-                if lasttok == '' or lasttok == pc.gettok(q, 0, ': '):
-                    if lasttok == '':
-                        lasttok = pc.gettok(q, 0, ': ')
-                    q = pc.gettok(q, 1, ': ')
-                    fixnum += 1
-                    qlog.write('ERR-FIX-MOD2: ' + filelines[x])
-                    c_file.write(str(q) + '`' + str(a))
-                    continue
-                else:
-                    lasttok = ''
-                    qlog.write('ERR-REJ-OK: ' + filelines[x])
-                    c_file.write(str(q) + '`' + str(a))
-                    continue
+                q = pc.gettok(q, 1, ': ')
+                fixnum += 1
+                qlog.write('ERR-FIX-MOD1: ' + fileline + '\n')
+                c_file.write(str(q) + '`' + str(a) + '\n')
+                continue
+
             # Fix erroneous colan formats (remove Category: and leave Sub-Category:)
             # Category: Sub-category: Question
             if pc.numtok(q, ': ') == 3:
-                tok1 = pc.gettok(q, 0, ': ')
-                tok2 = pc.gettok(q, 1, ': ')
-                if l_tok1 == '':
-                    l_tok1 = tok1
-                if l_tok2 == '':
-                    l_tok2 = tok2
-                if l_tok1 == tok1 and l_tok2 == tok2:
-                    ltk = tok1 + ': '
-                    q = q.replace(ltk, '')
-                    fixnum += 1
-                    print(f'PRINTEST: {q}`{a}')
-                    qlog.write('ERR-FIX-MOD3: ' + filelines[x])
-                    c_file.write(str(q) + '`' + str(a))
-                    continue
+                q = pc.gettok(q, 1, ': ') + ': ' + pc.gettok(q, 2, ': ')
+                fixnum += 1
+                # print(f'PRINTEST: {q}`{a}')
+                qlog.write('ERR-FIX-MOD2: ' + fileline + '\n')
+                c_file.write(str(q) + '`' + str(a) + '\n')
+                continue
+
+            # Category : Question
+            if pc.numtok(q, ' : ') == 2:
+                q = pc.gettok(q, 1, ' : ')
+                fixnum += 1
+                qlog.write('ERR-FIX-MOD3: ' + fileline + '\n')
+                c_file.write(str(q) + '`' + str(a) + '\n')
+                continue
+
+            # Category:Question
+            if pc.numtok(q, ':') == 2:
+                q = pc.gettok(q, 1, ':')
+                fixnum += 1
+                qlog.write('ERR-FIX-MOD4: ' + fileline + '\n')
+                c_file.write(str(q) + '`' + str(a) + '\n')
+                continue
 
             # Remove erroneous excessive colon formats
             if pc.numtok(q, ':') >= 4:
                 errnum += 1
-                qlog.write('ERR-TOK-EXC: ' + filelines[x])
+                qlog.write('ERR-TOK-EXC: ' + fileline + '\n')
                 continue
 
             # Properly formatted question, write to file.
-            c_file.write(filelines[x])
+            c_file.write(fileline + '\n')
             continue
     file.close()
     c_file.close()
@@ -816,8 +822,8 @@ def timer(server, channel):
     chan = channel.replace('#', '')
     chan = chan.lower()
     # while pdata[server, chan]['timerun'] is True:
-    while True:
-        if pdata[server, chan]['timerun'] is False:
+    while pdata[server, chan]['game'] != '0':
+        if pdata[server, chan]['timerun'] is False:  # ???
             break
 
         # if pdata[server, chan]['game'] == '0':  # This is useful or not idk
@@ -1316,11 +1322,11 @@ async def score_keep(server, channel, args):
     pc.privmsg_(server, channel, score_msg)
     return
 
-# ¯\_(o.O)_/¯ Is this Sparta? (This actually just seperates and formats score
+# ¯\_(o.O)_/¯ Is this Sparta? (This actually just seperates and formats player score)
 def eep(wildeep):  # This is quite the useful tool
     wild = pc.gettok(wildeep, 1, '^')
     eep_ = pc.gettok(wildeep, 0, '^')
-    return str('\x0310,1' + wild + '\x036,1 ' + eep_)
+    return str('\x0310,1' + wild + '\x033,1 ' + eep_)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Fastest Players of the day
