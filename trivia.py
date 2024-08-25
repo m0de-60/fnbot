@@ -191,11 +191,11 @@ async def evt_join(server, joindata):
                 return
             # need to check for time errors here and restart trivia
             #
-            time.sleep(0.5)
+            time.sleep(0.05)
             pc.privmsg_(server, channel, '\x0315,1Welcome to\x0310,1 ' + channel.decode() + ', \x0315,1Next question in\x02\x033,1 ' + str(ctime) + ' \x02\x0315,1seconds. Use \x0310,1!thelp\x0315,1 for help.\x03')
             return
         if pdata[server, chan]['game'] == 'play':
-            time.sleep(0.5)
+            time.sleep(0.05)
             hintmsg = pdata[server, chan]['hint']
             if pdata[server, chan]['hints'] > 1:
                 hintmsg = pdata[server, chan]['hint2']
@@ -292,7 +292,6 @@ async def evt_privmsg(server, message):
             if pc.iistok(pdata['categories'], cat.lower(), ',') is False or pc.isfile(filename) is False:
                 pc.notice_(server, username, '[T-M] * ERROR: Category ' + cat.lower() + ' not found.')
                 return
-            print(f'Here')
             new_q = new_q.decode()
             file = open(filename, 'a')
             file.write('\n' + new_q)
@@ -343,44 +342,44 @@ async def evt_privmsg(server, message):
                 return
             if pdata[server, chan]['game'] == 'time':
                 ctime = 20 - round(time.time() - float(pdata[server, chan]['timer']))
-                time.sleep(0.4)
+                time.sleep(0.04)
                 pc.privmsg_(server, channel, '\x0315,1New question coming up in\x02\x033,1 ' + str(ctime) + ' \x02\x03seconds.')
                 return
 
         if mdata[4].lower() == b'skip' and pdata[server, chan]['trivia'] is False:
-            time.sleep(0.5)
+            time.sleep(0.05)
             pc.privmsg_(server, channel, 'Trivia is not currently enabled.')
             return
 
         # !trivia on
         if mdata[4].lower() == b'on':
             if pdata[server, chan]['trivia'] is True:
-                time.sleep(0.5)
+                time.sleep(0.05)
                 pc.notice_(server, username, 'Trivia is already enabled.')
             else:
                 pdata[server, chan]['trivia'] = True
-                time.sleep(0.5)
+                time.sleep(0.05)
                 # pc.privmsg_(server, channel, 'Trivia has been enabled.')
                 await trivia(server, dchannel, 'start')
 
         # !trivia off
         if mdata[4].lower() == b'off':
             if pdata[server, chan]['trivia'] is False:
-                time.sleep(0.5)
+                time.sleep(0.05)
                 pc.notice_(server, username, 'Trivia is already disabled.')
             else:
                 pdata[server, chan]['trivia'] = False
-                time.sleep(0.5)
+                time.sleep(0.05)
                 # pc.notice_(server, username, 'Trivia has been disabled.')
                 await trivia(server, dchannel, 'stop')
 
     # ------------------------------------------------------------------------------------------------------------------
     # !thelp - displays help
-    elif mdata[3].lower() == b':!thelp':
+    elif mdata[3].lower() == b':!thelp' or mdata[3].lower() == b':!help':
         if pdata[server, chan]['trivia'] is False:
             return
-        time.sleep(0.25)
-        pc.privmsg_(server, channel, '\x02\x0315,1USER COMMANDS:\x02\x033,1  !myscore  !highscore  !streaks  !thelp\x03')
+        time.sleep(0.05)
+        pc.privmsg_(server, channel, '\x02\x0315,1CURRENT USER COMMANDS:\x02\x033,1  !myscore  !highscore  !fastest  !streaks  !thelp\x03')
         return
     # ------------------------------------------------------------------------------------------------------------------
     # !myscore - displays user score and statistics
@@ -390,10 +389,10 @@ async def evt_privmsg(server, message):
         if pc.cnfexists('trivia.cnf', server + '_' + chan, dusername) is False:
             pc.privmsg_(server, channel, str(username.decode()) + 'you have not played yet.')
             return
-        score = '\x037,1[\x033,1Score:\x038,1 ' + str(playerstats(server, channel, dusername, 'score')) + '\x037,1]'
-        wins = '\x037,1[\x033,1Wins:\x038,1 ' + str(playerstats(server, channel, dusername, 'wins')) + '\x037,1]'
-        streak = '\x037,1[\x033,1Longest Streak:\x038,1 ' + str(playerstats(server, channel, dusername, 'streak')) + '\x037,1]'
-        best = '\x037,1[\x033,1Best Time:\x038,1 ' + str(playerstats(server, channel, dusername, 'best')) + '\x037,1]\x03'
+        score = '\x0310,1[\x033,1Score:\x0311,1 ' + str(playerstats(server, channel, dusername, 'score')) + '\x0310,1]'
+        wins = '\x0310,1[\x033,1Wins:\x0311,1 ' + str(playerstats(server, channel, dusername, 'wins')) + '\x0310,1]'
+        streak = '\x0310,1[\x033,1Longest Streak:\x0311,1 ' + str(playerstats(server, channel, dusername, 'streak')) + '\x0310,1]'
+        best = '\x0310,1[\x033,1Best Time:\x0311,1 ' + str(playerstats(server, channel, dusername, 'best')) + '\x0310,1]\x03'
         stats = '\x02\x0315,1PLAYER SCORE:\x02\x0310,1    ' + username.decode() + '    ' + score + wins + streak + best
         # add stuff here so can be toggled from privmsg or notice
         time.sleep(0.5)
@@ -421,11 +420,11 @@ async def evt_privmsg(server, message):
     # !fastest - displays fastest players
     # Does not work, here for documentation
     # Needs good way of sorting floating number values
-    # elif mdata[3].lower() == b':!fastest':
-    #    if pdata[server, chan]['trivia'] is False:
-    #        return
-    #    await score_keep(server, channel, 'fp')
-    #    return
+    elif mdata[3].lower() == b':!fastest':
+        if pdata[server, chan]['trivia'] is False:
+            return
+        await score_keep(server, channel, 'fp')
+        return
 
     # ------------------------------------------------------------------------------------------------------------------
     # User answer input for Trivia
@@ -439,13 +438,13 @@ async def evt_privmsg(server, message):
                 totaltime = round(time.time() - pdata[server, chan]['response'], 2)
                 pdata[server, chan]['game'] = 'win'
                 pdata[server, chan]['timerun'] = False
-                pc.privmsg_(server, channel, '\x02\x0310,1' + username.decode() + '\x02   \x0315,1Wins\x037,1 ' + str(pdata[server, chan]['points']) + ' \x0315,1points!    \x02\x038,1ANSWER ---->\x02 ' + pdata[server, chan]['answer'] + '    \x02\x0315,1TIME:\x02\x037,1 ' + str(totaltime) + ' seconds\x03')
+                pc.privmsg_(server, channel, '\x02\x0310,1' + username.decode() + '\x02   \x0315,1Wins\x0311,1 ' + str(pdata[server, chan]['points']) + ' points!    \x02\x033,1ANSWER ---->\x02 ' + pdata[server, chan]['answer'] + '    \x02\x0315,1TIME:\x02\x0311,1 ' + str(totaltime) + ' seconds\x03')
                 wins = int(playerstats(server, channel, dusername, 'wins')) + 1
                 playerstats(server, channel, dusername, 'wins', 'c', str(wins))
                 points = int(playerstats(server, channel, dusername, 'score')) + int(pdata[server, chan]['points'])
                 playerstats(server, channel, dusername, 'score', 'c', str(points))
-                if playerstats(server, channel, dusername, 'best') == 'NA' or totaltime < float(playerstats(server, channel, dusername, 'best')):
-                    pc.privmsg_(server, channel, '\x02\x0310,1' + username.decode() + '\x02   \x037,1Set a new best time record!   \x02\x038,1>\x033,1 ' + str(totaltime) + ' seconds\x038,1 <\x02\x03')
+                if playerstats(server, channel, dusername, 'best') != 'NA' and totaltime < float(playerstats(server, channel, dusername, 'best')):
+                    pc.privmsg_(server, channel, '\x02\x0310,1' + username.decode() + '\x02   \x0311,1Set a new best time record!   \x02\x038,1>\x0311,1 ' + str(totaltime) + ' seconds\x038,1 <\x02\x03')
                     playerstats(server, channel, dusername, 'best', 'c', str(totaltime))
                 # set up for winning streak
                 if pdata[server, chan]['streakname'] != dusername:
@@ -456,7 +455,7 @@ async def evt_privmsg(server, message):
                     playerstats(server, channel.decode(), dusername, 'streak', 'c', str(pdata[server, chan]['streakcount']))
                 if pdata[server, chan]['streakcount'] > 1:
                     time.sleep(0.2)
-                    pc.privmsg_(server, channel, '\x02\x0310,1' + username.decode() + '\x02   \x0315,1Won\x02\x033,1 ' + str(pdata[server, chan]['streakcount']) + ' \x02\x0315,1in a row!   \x02\x037,1 * WINNING STREAK *\x02\x03')
+                    pc.privmsg_(server, channel, '\x02\x0310,1' + username.decode() + '\x02   \x0315,1Won\x02\x033,1 ' + str(pdata[server, chan]['streakcount']) + ' \x02\x0315,1in a row!   \x02\x0311,1 * WINNING STREAK *\x02\x03')
                 time.sleep(1.25)
                 freetriv(server, dchannel)
                 await trivia(server, dchannel, 'next')
@@ -490,7 +489,7 @@ async def trivia(server, channel, opt, cat='', opt2=''):
             cmsg = 'Random Category'
             if opt2 != '':
                 pdata[server, chan]['category'] = opt2
-        pc.privmsg_(server, channel.encode(), '\x02\x0314,1Trivia Master \x033,1   v' + pdata['pversion'] + '\x02\x0315,1    Now running:\x037,1 \x02' + cmsg + '\x02\x03')
+        pc.privmsg_(server, channel.encode(), '\x02\x0314,1Trivia Master \x033,1   v' + pdata['pversion'] + '\x02\x0315,1    Now running:\x0310,1 \x02' + cmsg + '\x02\x03')
         time.sleep(1)
         pdata[server, chan]['game'] = 'time'
         # mprint(f'AWAIT NEXT')
@@ -615,7 +614,7 @@ async def trivia(server, channel, opt, cat='', opt2=''):
         # create hint!!
         hintx = 'hint' + str(pdata[server, chan]['hints'])
         hint = pdata[server, chan][hintx]
-        pc.privmsg_(server, channel.encode(), '\x02\x0314,1Hint # ' + str(pdata[server, chan]['hints']) + ':\x02\x037,1 ' + str(hint) + '\x03')
+        pc.privmsg_(server, channel.encode(), '\x02\x0314,1Hint # ' + str(pdata[server, chan]['hints']) + ': ' + str(hint) + '\x02\x03')
         # hint = hint_gen(ans, int(pdata[server, chan]['hints']), hnt)
         # pc.privmsg_(server, channel.encode(), 'Hint #' + str(pdata[server, chan]['hints']) + ': ' + hint)
 
@@ -633,7 +632,7 @@ async def trivia(server, channel, opt, cat='', opt2=''):
         pdata[server, chan]['timerun'] = False
         pdata[server, chan]['streakname'] = '0'
         pdata[server, chan]['streakcount'] = 0
-        pc.privmsg_(server, channel.encode(), '\x02\x037,1Time is up!\x02\x0315,1    The answer is:\x02\x033,1 ' + pdata[server, chan]['answer'] + '\x03\x02')
+        pc.privmsg_(server, channel.encode(), '\x02\x0311,1Time is up!\x02\x0315,1    The answer is:\x02\x033,1 ' + pdata[server, chan]['answer'] + '\x03\x02')
         time.sleep(1)
         freetriv(server, channel)
         await trivia(server, channel, 'next')
@@ -779,20 +778,10 @@ def t_file_clean(filename):
     file.close()
     c_file.close()
     qlog.close()
-    # saving the 'cleaned list' as the category file.
-    # open(fname, 'w').close()
-    # file = open(fname, 'a')
-    # c_file = open('./qafiles/cleanfile.txt', 'r')
-    # filelines = c_file.readlines()
-    # errnum = 0
-    # for x in range(len(filelines)):
-    #    # errnum += 1
-    #    file.write(filelines[x])
-    #    continue
-    # c_file.close()
+    # removing old and resaving the 'cleaned list' as the category file.
     pc.remfile(filename)
     pc.renamefile('./qafiles/cleanfile.txt', filename)
-    # returns the number of errors found
+    # returns the number of errors found and fixed or removed
     return str(errnum) + '^' + str(fixnum)
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -1255,7 +1244,7 @@ async def score_keep(server, channel, args):
     chan_dat = server + '_' + chan
     parser = RawConfigParser()
     datagot = ''
-    if args == 'hs' or args == 'st':
+    if args == 'hs' or args == 'st' or args == 'fp':
         datagot = []
     # if args == 'fp':
     #    datagot = {}
@@ -1273,15 +1262,14 @@ async def score_keep(server, channel, args):
             else:
                 datagot.append(str(playerstats(server, channel, datkey, 'score')) + '^' + datkey)
             continue
-        # if args == 'fp':
-        #    if score_msg == '':
-        #        score_msg = '\x02\x0315,1FASTEST PLAYERS:\x02 '
-        #    if playerstats(server, channel, datkey, 'best') == 'NA':
-        #        continue
-        #    else:
-        #        datagot[datkey] = float(playerstats(server, channel, datkey, 'best'))
-        #        # datagot.append(str(playerstats(server, channel, datkey, 'best')) + '^' + datkey)
-        #        continue
+        if args == 'fp':
+            if score_msg == '':
+                score_msg = '\x02\x0315,1FASTEST PLAYERS:\x02 '
+            if playerstats(server, channel, datkey, 'best') == 'NA':
+                continue
+            else:
+                datagot.append(str(playerstats(server, channel, datkey, 'best')) + '^' + datkey)
+            continue
         if args == 'st':
             if score_msg == '':
                 score_msg = '\x02\x0315,1BEST STREAKS:\x02   '
@@ -1306,18 +1294,32 @@ async def score_keep(server, channel, args):
 
     if args == 'hs' or args == 'st':
         # There was a sorting bug here, thank you to katia for fixing this! :)
-        datagot.sort(key=lambda x: int(x.split('^')[0]), reverse=True)  # katia fixed this
+        datagot.sort(key=lambda o: int(o.split('^')[0]), reverse=True)  # katia fixed this
+
+    if args == 'fp':
+        # Used the same method as katia but changed to float.
+        datagot.sort(key=lambda o: float(o.split('^')[0]), reverse=False)
+
+    if len(datagot) > 1:
+        for x in range(len(datagot)):
+            if x == 0:
+                if args == 'fp':
+                    score_msg = score_msg + eep(datagot[x]) + ' seconds'
+                else:
+                    score_msg = score_msg + eep(datagot[x])
+            else:
+                if args == 'fp':
+                    score_msg = score_msg + ' \x02\x0310,1|\x02 ' + eep(datagot[x]) + ' seconds'
+                else:
+                    score_msg = score_msg + ' \x02\x0310,1|\x02 ' + eep(datagot[x])
+
+            if x == 4:
+                break
+            else:
+                continue
 
     if len(datagot) == 1:
         score_msg = score_msg + eep(datagot[0])
-    if len(datagot) == 2:
-        score_msg = score_msg + eep(datagot[0]) + ' \x02\x037,1|\x02 ' + eep(datagot[1])
-    if len(datagot) == 3:
-        score_msg = score_msg + eep(datagot[0]) + ' \x02\x037,1|\x02 ' + eep(datagot[1]) + ' \x02\x037,1|\x02 ' + eep(datagot[2])
-    if len(datagot) == 4:
-        score_msg = score_msg + eep(datagot[0]) + ' \x02\x037,1|\x02 ' + eep(datagot[1]) + ' \x02\x037,1|\x02 ' + eep(datagot[2]) + ' \x02\x037,1|\x02 ' + eep(datagot[3])
-    if len(datagot) >= 5:
-        score_msg = score_msg + eep(datagot[0]) + ' \x02\x037,1|\x02 ' + eep(datagot[1]) + ' \x02\x037,1|\x02 ' + eep(datagot[2]) + ' \x02\x037,1|\x02 ' + eep(datagot[3]) + ' \x02\x037,1|\x02 ' + eep(datagot[4])
 
     pc.privmsg_(server, channel, score_msg)
     return
