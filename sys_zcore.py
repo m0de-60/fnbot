@@ -1102,17 +1102,27 @@ def ctime():
     now = datetime.now()
     return now.strftime("%H:%M:%S")
 
+# Current hour of the day ----------------------------------------------------------------------------------------------
+def chour():
+    now = datetime.now()
+    tok = now.strftime("%H:%M:%S").split(':')
+    return tok[0]
+
 # Current Day of the year ----------------------------------------------------------------------------------------------
 def cday():
     return gettok(str(date.today()), 2, '-')
 
 # Current Week of the year ---------------------------------------------------------------------------------------------
 def cweek():
-    return date.today().isocalendar()[1]
+    return str(date.today().isocalendar()[1])
 
 # Current Month of the year --------------------------------------------------------------------------------------------
 def cmonth():
     return gettok(str(date.today()), 1, '-')
+
+# Current year
+def cyear():
+    return gettok(str(date.today()), 0, '-')
 
 # 1 hour in seconds (3600) ---------------------------------------------------------------------------------------------
 def hour1():

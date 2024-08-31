@@ -713,7 +713,14 @@ async def irc_loop(threadname):
                     # --------------------------------------------------------------------------------------------------
                     # QUIT handling
                     # b':Test123!Mibbit@hostmask.net QUIT :Client Quit'
+                    # NEED TO ADD A CHECK FOR EXCESS FLOOD BY THE BOT!
                     if zcore[threadname, 'data'][1] == b'QUIT':
+                        # Excess Flood
+                        # if len(zcore[threadname, 'data']) >= 3 and zcore[threadname, 'data'][2].lower() == b':excess':
+                        #   usr = gettok(zcore[threadname, 'data'][0], 0, b'!').replace(b':', b'')
+                        #   usr = usr.decode()
+                        #   if usr.lower() == zcore[threadname, 'botname'].lower():
+
                         # system module
                         if zcore['system'] != '0':
                             try:
@@ -829,7 +836,7 @@ async def keep_alive():
                     try:
                         zcore[server[pc], 'sock'].send(b'PING :' + bytes(str(zcore['versionid'].upper()), 'utf-8') + b'\r\n')
                         zcore[server[pc], 'keepalive'] = time.time()
-                    except ssl.SSLError or socket.gaierror or ConnectionResetError:
+                    except ssl.SSLError or socket.gaierror or ConnectionResetError or OSError:
                         zprint(f'[*] Error * Connection to {server[pc]} has been lost at {ctime()} on {cdate()}. Preparing for reconnection...')
                         zcore[server[pc], 'connected'] = False
                         zcore[server[pc], 'sock'].close()
